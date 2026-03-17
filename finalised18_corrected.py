@@ -71,7 +71,9 @@ GH_PATHS = {
 
 def _gh_headers():
     token = st.secrets.get("GITHUB_TOKEN", "")
-    return {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
+    # Fine-grained tokens (github_pat_) require "Bearer", classic tokens use "token"
+    # Using "Bearer" works for BOTH token types
+    return {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
 
 def _gh_repo():
     return st.secrets.get("GITHUB_REPO", "")
