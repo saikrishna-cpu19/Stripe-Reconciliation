@@ -112,9 +112,14 @@ def github_write_excel(gh_path: str, sheets: dict):
     # Build Excel bytes
     bio = io.BytesIO()
     with pd.ExcelWriter(bio, engine="openpyxl") as writer:
+        any_written = False
         for sheet, df in sheets.items():
             if df is not None and not df.empty:
                 sanitize_for_excel(df).to_excel(writer, sheet_name=sheet[:31], index=False)
+                any_written = True
+        # openpyxl requires at least one visible sheet — write placeholder if all empty
+        if not any_written:
+            pd.DataFrame({"status": ["No data yet"]}).to_excel(writer, sheet_name="Placeholder", index=False)
     bio.seek(0)
     new_content_b64 = base64.b64encode(bio.read()).decode()
 
@@ -212,10 +217,16 @@ def safe_sheet_name(name: str) -> str:
 def to_excel_bytes(sheets: dict, dashboard_sheet_name: str = None, dashboard_df: pd.DataFrame = None) -> bytes:
     bio = io.BytesIO()
     with pd.ExcelWriter(bio, engine="openpyxl") as writer:
-        if dashboard_sheet_name is not None and dashboard_df is not None:
+        any_written = False
+        if dashboard_sheet_name is not None and dashboard_df is not None and not dashboard_df.empty:
             sanitize_for_excel(dashboard_df).to_excel(writer, sheet_name=safe_sheet_name(dashboard_sheet_name), index=False)
+            any_written = True
         for n, d in sheets.items():
-            sanitize_for_excel(d).to_excel(writer, sheet_name=safe_sheet_name(n), index=False)
+            if d is not None and not (isinstance(d, pd.DataFrame) and d.empty):
+                sanitize_for_excel(d).to_excel(writer, sheet_name=safe_sheet_name(n), index=False)
+                any_written = True
+        if not any_written:
+            pd.DataFrame({"status": ["No data yet"]}).to_excel(writer, sheet_name="Placeholder", index=False)
     bio.seek(0)
     return bio.read()
 
