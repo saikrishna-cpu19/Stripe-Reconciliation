@@ -1,0 +1,10 @@
+streamlit
+pandas
+numpy
+matplotlib
+openpyxl
+xlrd
+pypdf2
+python-docx
+python-pptx
+Pillow
