@@ -796,7 +796,12 @@ with tab3:
         for c in ["as_of_date","cleared_using_stripe_date","cleared_on_run_date"]:
             if c in rrn_hist_sorted.columns:
                 rrn_hist_sorted[c] = pd.to_datetime(rrn_hist_sorted[c], errors="coerce")
-        rrn_hist_sorted = rrn_hist_sorted.sort_values(by=["cleared_on_run_date","cleared_using_stripe_date","as_of_date"])
+            else:
+                rrn_hist_sorted[c] = pd.NaT  # add missing column so sort never raises KeyError
+        rrn_hist_sorted = rrn_hist_sorted.sort_values(
+            by=["cleared_on_run_date","cleared_using_stripe_date","as_of_date"],
+            na_position="last"
+        )
         st.dataframe(rrn_hist_sorted, use_container_width=True, height=260)
         st.download_button("⬇️ Download RRN_Match_History.xlsx",
                            to_excel_bytes({"RRN_Match_History": rrn_hist_sorted}),
